@@ -1,0 +1,109 @@
+import Data.Array
+import Data.List (permutations)
+import Data.Set (Set, toList, fromList, delete, member)
+import qualified Data.Set as S
+import System.Environment (getArgs)
+
+-- index by index
+-- 
+
+-- 4 = 3:30
+-- 4 = 1:50s
+-- 5 secs??!
+
+-- we have half an hour for the presentation (but 15-20 is probably better)
+
+magicConstant :: Int -> Int
+magicConstant n = n * (n * n + 1) `div` 2
+
+lengthNPermutations :: Set a -> Int -> [[a]]
+lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toList xs
+    where 
+        subsequencesOfLength :: Int -> [a] -> [[a]]
+        subsequencesOfLength 0 _      = [[]]
+        subsequencesOfLength _ []     = []
+        subsequencesOfLength k (y:ys) = map (y:) (subsequencesOfLength (k-1) ys) ++ subsequencesOfLength k ys
+
+check :: Int -> Array (Int, Int) Int -> Bool
+check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
+    where 
+        constant = magicConstant n
+
+        checkRows i
+            | i == n    = True
+            | otherwise = checkRow i && (checkRows $ i + 1)
+        checkRow i = sum [ square ! (i, j) | j <- [0..(n-1)] ] == constant
+
+        checkCols i
+            | i == n    = True
+            | otherwise = checkCol i && (checkCols $ i + 1)
+        checkCol j = sum [ square ! (i, j) | i <- [0..(n-1)] ] == constant
+
+        checkDiagOne = sum [ square ! (i, i) | i <- [0..(n-1)] ] == constant
+
+        checkDiagTwo = sum [ square ! (n - i - 1, i) | i <- [0..(n-1)] ] == constant
+
+row :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
+row n pos square rest = possibleRows stepPerms
+    where
+        constant = magicConstant n
+        base = constant - sum [ square ! (pos, j) | j <- [0..(pos - 1)] ]
+        stepPerms = lengthNPermutations rest (n - 1 - pos)
+        possibleRows []     = 0
+        possibleRows (p:ps) = pVal + possibleRows ps
+            where
+                r = base - sum p
+                s = foldr (\a b -> delete a b) rest p
+                pVal
+                    | member r s = col n pos nextSquare $ delete r s 
+                    | otherwise  = 0
+                nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
+                                    // [((pos, n - 1), r)]
+
+col :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
+col n pos square rest
+    | S.null rest = case check n square of
+        True  -> 1
+        False -> 0
+    | otherwise     = possibleCols stepPerms
+    where
+        constant = magicConstant n
+        base = constant - sum [ square ! (i, pos) | i <- [0..(pos)] ]
+        stepPerms = lengthNPermutations rest (n - 2 - pos)
+        possibleCols []     = 0
+        possibleCols (p:ps) = pVal + possibleCols ps
+            where
+                p0 = case p of 
+                    (p0':_)   -> p0'
+                    []        -> error "tst"
+                s1 = square ! (0, 1)
+                r = base - sum p
+                s = foldr (\a b -> delete a b) rest p
+                pVal
+                    | pos == 0 && p0 < s1 = 0
+                    | member r s          = row n (pos + 1) nextSquare $ delete r s
+                    | otherwise           = 0
+                nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
+                                    // [((n - 1, pos), r)]
+
+
+enumerateSquares :: Int -> Int
+enumerateSquares n = (row n 0 square values) * 2
+    where
+        square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
+        values = fromList [1..n*n]
+
+{-
+test = check 3 arr
+    where
+        arr = array ((0,0), (2,2)) [((0,0), 8), ((0,1), 1), ((0,2), 6),
+                                    ((1,0), 3), ((1,1), 5), ((1,2), 7),
+                                    ((2,0), 4), ((2,1), 9), ((2,2), 2)]
+-}
+
+main :: IO ()
+main = do
+    a <- getArgs
+    case a of
+        [s] | n >= 1 -> print (enumerateSquares n) where n = read s :: Int
+        _            -> putStrLn "one argument, must be integer >= 1"
