@@ -26,7 +26,7 @@ lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toL
         subsequencesOfLength k (y:ys) = map (y:) (subsequencesOfLength (k-1) ys) ++ subsequencesOfLength k ys
 
 check :: Int -> Array (Int, Int) Int -> Bool
-check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
+check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && checkTopLeftSmaller
     where
         constant = magicConstant n
 
@@ -44,6 +44,9 @@ check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
 
         checkDiagTwo = sum [ square ! (n - i - 1, i) | i <- [0..(n-1)] ] == constant
 
+        -- For reflextion fixes
+        checkTopLeftSmaller = square ! (0, 0) > square ! (n - 1, n - 1)
+
 row :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
 row n pos square rest = possibleRows stepPerms
     where
@@ -55,11 +58,15 @@ row n pos square rest = possibleRows stepPerms
             | pos * 2 < targetD = pVal `par` possibleRows ps `pseq` (pVal + possibleRows ps)
             | otherwise         = pVal + possibleRows ps
             where
+                p0 = case p of
+                    (p0':_)   -> p0'
+                    []        -> error "tst"                
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | member r s = col n pos nextSquare $ delete r s
-                    | otherwise  = 0
+                    | pos == 0 && r > p0 = 0
+                    | member r s         = col n pos nextSquare $ delete r s
+                    | otherwise          = 0
                 nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
                                     // [((pos, n - 1), r)]
 
@@ -76,22 +83,19 @@ col n pos square rest
             | pos * 2 + 1 < targetD = pVal `par` possibleCols ps `pseq` (pVal + possibleCols ps)
             | otherwise             = pVal + possibleCols ps
             where
-                p0 = case p of
-                    (p0':_)   -> p0'
-                    []        -> error "tst"
-                s1 = square ! (0, 1)
+                s0 = square ! (0, 0)
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && p0 < s1 = 0
-                    | member r s          = row n (pos + 1) nextSquare $ delete r s
-                    | otherwise           = 0
+                    | pos == 0 && r > s0 = 0
+                    | member r s         = row n (pos + 1) nextSquare $ delete r s
+                    | otherwise          = 0
                 nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
                                     // [((n - 1, pos), r)]
 
 
 enumerateSquares :: Int -> Int
-enumerateSquares n = row n 0 square values * 2
+enumerateSquares n = row n 0 square values * 4
     where
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
