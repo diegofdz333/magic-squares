@@ -12,6 +12,8 @@ import Control.Parallel
 -- 4 = 1:50s
 -- 5 secs??!
 
+-- 0.25 seconds in fast computer
+
 -- we have half an hour for the presentation (but 15-20 is probably better)
 
 magicConstant :: Int -> Int
@@ -84,18 +86,19 @@ col n pos square rest
             | otherwise             = pVal + possibleCols ps
             where
                 s0 = square ! (0, 0)
+                s1 = square ! (0, n - 1)
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && r > s0 = 0
-                    | member r s         = row n (pos + 1) nextSquare $ delete r s
-                    | otherwise          = 0
+                    | pos == 0 && (r > s0 || r > s1) = 0
+                    | member r s                     = row n (pos + 1) nextSquare $ delete r s
+                    | otherwise                      = 0
                 nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
                                     // [((n - 1, pos), r)]
 
 
 enumerateSquares :: Int -> Int
-enumerateSquares n = row n 0 square values * 4
+enumerateSquares n = row n 0 square values * 8
     where
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
