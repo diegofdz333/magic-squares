@@ -3,6 +3,7 @@ import Data.List (permutations)
 import Data.Set (Set, toList, fromList, delete, member)
 import qualified Data.Set as S
 import System.Environment (getArgs)
+import Control.Parallel
 
 -- index by index
 -- 
@@ -18,7 +19,7 @@ magicConstant n = n * (n * n + 1) `div` 2
 
 lengthNPermutations :: Set a -> Int -> [[a]]
 lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toList xs
-    where 
+    where
         subsequencesOfLength :: Int -> [a] -> [[a]]
         subsequencesOfLength 0 _      = [[]]
         subsequencesOfLength _ []     = []
@@ -26,17 +27,17 @@ lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toL
 
 check :: Int -> Array (Int, Int) Int -> Bool
 check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
-    where 
+    where
         constant = magicConstant n
 
         checkRows i
             | i == n    = True
-            | otherwise = checkRow i && (checkRows $ i + 1)
+            | otherwise = checkRow i && checkRows (i + 1)
         checkRow i = sum [ square ! (i, j) | j <- [0..(n-1)] ] == constant
 
         checkCols i
             | i == n    = True
-            | otherwise = checkCol i && (checkCols $ i + 1)
+            | otherwise = checkCol i && checkCols (i + 1)
         checkCol j = sum [ square ! (i, j) | i <- [0..(n-1)] ] == constant
 
         checkDiagOne = sum [ square ! (i, i) | i <- [0..(n-1)] ] == constant
@@ -50,35 +51,37 @@ row n pos square rest = possibleRows stepPerms
         base = constant - sum [ square ! (pos, j) | j <- [0..(pos - 1)] ]
         stepPerms = lengthNPermutations rest (n - 1 - pos)
         possibleRows []     = 0
-        possibleRows (p:ps) = pVal + possibleRows ps
+        possibleRows (p:ps)
+            | pos * 2 < targetD = pVal `par` possibleRows ps `pseq` (pVal + possibleRows ps)
+            | otherwise         = pVal + possibleRows ps
             where
                 r = base - sum p
-                s = foldr (\a b -> delete a b) rest p
+                s = foldr delete rest p
                 pVal
-                    | member r s = col n pos nextSquare $ delete r s 
+                    | member r s = col n pos nextSquare $ delete r s
                     | otherwise  = 0
                 nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
                                     // [((pos, n - 1), r)]
 
 col :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
 col n pos square rest
-    | S.null rest = case check n square of
-        True  -> 1
-        False -> 0
+    | S.null rest = if check n square then 1 else 0
     | otherwise     = possibleCols stepPerms
     where
         constant = magicConstant n
-        base = constant - sum [ square ! (i, pos) | i <- [0..(pos)] ]
+        base = constant - sum [ square ! (i, pos) | i <- [0..pos] ]
         stepPerms = lengthNPermutations rest (n - 2 - pos)
         possibleCols []     = 0
-        possibleCols (p:ps) = pVal + possibleCols ps
+        possibleCols (p:ps)
+            | pos * 2 + 1 < targetD = pVal `par` possibleCols ps `pseq` (pVal + possibleCols ps)
+            | otherwise             = pVal + possibleCols ps
             where
-                p0 = case p of 
+                p0 = case p of
                     (p0':_)   -> p0'
                     []        -> error "tst"
                 s1 = square ! (0, 1)
                 r = base - sum p
-                s = foldr (\a b -> delete a b) rest p
+                s = foldr delete rest p
                 pVal
                     | pos == 0 && p0 < s1 = 0
                     | member r s          = row n (pos + 1) nextSquare $ delete r s
@@ -88,7 +91,7 @@ col n pos square rest
 
 
 enumerateSquares :: Int -> Int
-enumerateSquares n = (row n 0 square values) * 2
+enumerateSquares n = row n 0 square values * 2
     where
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
@@ -100,6 +103,9 @@ test = check 3 arr
                                     ((1,0), 3), ((1,1), 5), ((1,2), 7),
                                     ((2,0), 4), ((2,1), 9), ((2,2), 2)]
 -}
+
+targetD :: Int
+targetD = 1
 
 main :: IO ()
 main = do
