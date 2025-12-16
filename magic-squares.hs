@@ -28,7 +28,7 @@ lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toL
         subsequencesOfLength k (y:ys) = map (y:) (subsequencesOfLength (k-1) ys) ++ subsequencesOfLength k ys
 
 check :: Int -> Array (Int, Int) Int -> Bool
-check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && checkTopLeftSmaller
+check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && checkLastCornerLargest
     where
         constant = magicConstant n
 
@@ -47,7 +47,7 @@ check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && c
         checkDiagTwo = sum [ square ! (n - i - 1, i) | i <- [0..(n-1)] ] == constant
 
         -- For reflextion fixes
-        checkTopLeftSmaller = square ! (0, 0) > square ! (n - 1, n - 1)
+        checkLastCornerLargest = square ! (0, 0) < square ! (n - 1, n - 1)
 
 row :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
 row n pos square rest = possibleRows stepPerms
@@ -66,7 +66,7 @@ row n pos square rest = possibleRows stepPerms
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && r > p0 = 0
+                    | pos == 0 && r < p0 = 0
                     | member r s         = col n pos nextSquare $ delete r s
                     | otherwise          = 0
                 nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
@@ -85,12 +85,11 @@ col n pos square rest
             | pos * 2 + 1 < targetD = pVal `par` possibleCols ps `pseq` (pVal + possibleCols ps)
             | otherwise             = pVal + possibleCols ps
             where
-                s0 = square ! (0, 0)
                 s1 = square ! (0, n - 1)
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && (r > s0 || r > s1) = 0
+                    | pos == 0 && r < s1 = 0
                     | member r s                     = row n (pos + 1) nextSquare $ delete r s
                     | otherwise                      = 0
                 nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
@@ -102,14 +101,6 @@ enumerateSquares n = row n 0 square values * 8
     where
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
-
-{-
-test = check 3 arr
-    where
-        arr = array ((0,0), (2,2)) [((0,0), 8), ((0,1), 1), ((0,2), 6),
-                                    ((1,0), 3), ((1,1), 5), ((1,2), 7),
-                                    ((2,0), 4), ((2,1), 9), ((2,2), 2)]
--}
 
 targetD :: Int
 targetD = 1
