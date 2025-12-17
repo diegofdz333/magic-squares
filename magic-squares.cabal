@@ -21,6 +21,7 @@ library
       MSParallel
       MSParallelElements
       MSSequential
+      MSSequentialRR
   other-modules:
       Paths_magic_squares
   hs-source-dirs:

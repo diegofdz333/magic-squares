@@ -58,7 +58,7 @@ row n pos square rest = possibleRows stepPerms
             where
                 p0 = case p of
                     (p0':_)   -> p0'
-                    []        -> error "tst"                
+                    []        -> error "Unreachable, p will always have at least one element"                
                 r = base - sum p -- The necessary value for the last element for row to be magic.
                 s = foldr delete rest p
                 pVal

@@ -1,4 +1,4 @@
-module MSSequential (enumerateSquares) where
+module MSSequentialRR (enumerateSquares) where
 
 import Data.Array
 import Data.List (permutations)
@@ -19,7 +19,7 @@ lengthNPermutations xs n = concatMap permutations $ subsequencesOfLength n $ toL
 
 -- Check if a filled Square is Magic
 check :: Int -> Array (Int, Int) Int -> Bool
-check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
+check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && checkLastCornerLargest
     where
         constant = magicConstant n
 
@@ -37,6 +37,9 @@ check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo
 
         checkDiagTwo = sum [ square ! (n - i - 1, i) | i <- [0..(n-1)] ] == constant
 
+        -- Reflection / Rotation Fix
+        checkLastCornerLargest = square ! (0, 0) < square ! (n - 1, n - 1)
+
 -- Fill in a row of the magic square.
 row :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
 row n pos square rest = possibleRows stepPerms
@@ -49,12 +52,16 @@ row n pos square rest = possibleRows stepPerms
 
         possibleRows []     = 0
         possibleRows (p:ps) = pVal + possibleRows ps
-            where              
+            where
+                p0 = case p of
+                    (p0':_)   -> p0'
+                    []        -> error "Unreachable, p will always have at least one element"                
                 r = base - sum p -- The necessary value for the last element for row to be magic.
                 s = foldr delete rest p
                 pVal
-                    | member r s = col n pos nextSquare $ delete r s
-                    | otherwise  = 0 -- Prune if the necessary last element of row does not exist.
+                    | pos == 0 && r < p0 = 0 -- Reflection / Rotation Fix
+                    | member r s         = col n pos nextSquare $ delete r s
+                    | otherwise          = 0 -- Prune if the necessary last element of row does not exist.
                 nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
                                     // [((pos, n - 1), r)]
 
@@ -71,16 +78,19 @@ col n pos square rest
         possibleCols []     = 0
         possibleCols (p:ps) = pVal + possibleCols ps
             where
+                s1 = square ! (0, n - 1)
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | member r s = row n (pos + 1) nextSquare $ delete r s
-                    | otherwise  = 0
+                    | pos == 0 && r < s1 = 0 -- Reflection / Rotation Fix
+                    | member r s                     = row n (pos + 1) nextSquare $ delete r s
+                    | otherwise                      = 0
                 nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
                                     // [((n - 1, pos), r)]
 
+
 enumerateSquares :: Int -> Int
-enumerateSquares n = row n 0 square values
+enumerateSquares n = row n 0 square values * 8
     where
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
