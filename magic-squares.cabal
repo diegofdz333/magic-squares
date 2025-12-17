@@ -1,0 +1,64 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           magic-squares
+version:        0.0.0
+homepage:       https://github.com/diegofdz/magic-squares#readme
+bug-reports:    https://github.com/diegofdz/magic-squares/issues
+author:         Diego Fernandez
+maintainer:     Diego Fernandez
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/diegofdz/magic-squares
+
+library
+  exposed-modules:
+      MSParallel
+      MSParallelElements
+  other-modules:
+      Paths_magic_squares
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -O2 -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , containers
+    , parallel
+  default-language: Haskell2010
+
+executable magic-squares-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_magic_squares
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -O2 -threaded -rtsopts -with-rtsopts=-N -O2 -Wall -threaded -rtsopts
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , containers
+    , magic-squares
+    , parallel
+  default-language: Haskell2010
+
+test-suite magic-squares-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_magic_squares
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -O2 -threaded -rtsopts -with-rtsopts=-N -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , containers
+    , magic-squares
+    , parallel
+  default-language: Haskell2010

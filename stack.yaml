@@ -1,0 +1,24 @@
+snapshot: lts-22.33
+
+packages:
+- .
+
+# Dependency packages to be pulled from upstream that are not in the snapshot.
+# These entries can reference officially published versions as well as
+# forks / in-progress versions pinned to a git hash. For example:
+
+# extra-deps:
+# - acme-missiles-0.3
+# - git: https://github.com/commercialhaskell/stack.git
+#   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
+
+# Extra directories used by Stack for building
+# extra-include-dirs: [/path/to/dir]
+# extra-lib-dirs: [/path/to/dir]
+
+# Override default flag values for project packages and extra-deps
+# flags: {}
+
+# Override the architecture used by Stack, especially useful on Windows
+# arch: i386
+# arch: x86_64

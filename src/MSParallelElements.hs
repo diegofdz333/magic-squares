@@ -1,6 +1,7 @@
+module MSParallelElements (enumerateSquares) where
+
 import Data.Array
 import Data.Set (Set, toList, fromList, delete, member)
-import System.Environment (getArgs)
 import Control.Parallel
 
 magicConstant :: Int -> Int
@@ -107,10 +108,3 @@ enumerateSquares n = rowStep n 0 0 0 square values * 8
 
 targetD :: Int
 targetD = 2
-
-main :: IO ()
-main = do
-    a <- getArgs
-    case a of
-        [s] | n >= 1 -> print (enumerateSquares n) where n = read s :: Int
-        _            -> putStrLn "one argument, must be integer >= 1"

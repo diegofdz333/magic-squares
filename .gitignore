@@ -1,4 +1,2 @@
-*.eventlog
-*.exe
-*.hi
-*.o
+.stack-work/
+*~

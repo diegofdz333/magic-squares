@@ -1,20 +1,10 @@
+module MSParallel (enumerateSquares) where
+
 import Data.Array
 import Data.List (permutations)
 import Data.Set (Set, toList, fromList, delete, member)
 import qualified Data.Set as S
-import System.Environment (getArgs)
 import Control.Parallel
-
--- index by index
--- 
-
--- 4 = 3:30
--- 4 = 1:50s
--- 5 secs??!
-
--- 0.25 seconds in fast computer
-
--- we have half an hour for the presentation (but 15-20 is probably better)
 
 magicConstant :: Int -> Int
 magicConstant n = n * (n * n + 1) `div` 2
@@ -104,10 +94,3 @@ enumerateSquares n = row n 0 square values * 8
 
 targetD :: Int
 targetD = 1
-
-main :: IO ()
-main = do
-    a <- getArgs
-    case a of
-        [s] | n >= 1 -> print (enumerateSquares n) where n = read s :: Int
-        _            -> putStrLn "one argument, must be integer >= 1"
