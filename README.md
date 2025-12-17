@@ -15,8 +15,11 @@ To build run `stack build`
 ### Running Code
 
 To run sequentially run `stack run <mode> <n>`.
+
 To run in parallel run `stack run <mode> <n> -- +RTS -N<threads>`.
+
 For statistics add an `-s` tag.
+
 For logging ad an `-l` tag.
 
 `<n>` must be a positive integer. Anything greater than 4 will take over a day.
@@ -35,6 +38,9 @@ For logging ad an `-l` tag.
 #### Expected Output
 
 `n = 1 -> 1`
+
 `n = 2 -> 0`
+
 `n = 3 -> 8`
+
 `n = 4 -> 7040`
