@@ -33,9 +33,10 @@ rowStep n pos step depth square rest = possibleRowSteps $ toList rest
     where
         possibleRowSteps [] = 0
         possibleRowSteps (p:ps)
-            | pos == n - 1                = lastRow
+            | pos == 0 && step == 0 && (p > n * n - 3) = 0
+            | pos == n - 1     = lastRow
             | depth < targetD  = pVal `par` possibleRowSteps ps `pseq` (pVal + possibleRowSteps ps)
-            | otherwise                   = pVal + possibleRowSteps ps
+            | otherwise        = pVal + possibleRowSteps ps
             where
                 pVal
                     | step == n - 2 - pos = finalStep p
@@ -105,7 +106,7 @@ enumerateSquares n = rowStep n 0 0 0 square values * 8
         values = fromList [1..n*n]
 
 targetD :: Int
-targetD = 3
+targetD = 2
 
 main :: IO ()
 main = do
