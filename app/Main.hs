@@ -2,6 +2,7 @@ module Main (main) where
 
 import System.Environment (getArgs)
 
+import qualified MSSequential as Seq1
 import qualified MSParallel as Par1
 import qualified MSParallelElements as Par2
 
@@ -13,6 +14,7 @@ main = do
         _            -> putStrLn "Usage: stack run <mode> <n>"
         where
             magicSquares mode n
+                | mode == "seq1" = Seq1.enumerateSquares n
                 | mode == "par1" = Par1.enumerateSquares n
                 | mode == "par2" = Par2.enumerateSquares n
                 | otherwise      = error "<mode> must be \"par1\""

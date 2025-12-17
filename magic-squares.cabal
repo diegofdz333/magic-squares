@@ -20,6 +20,7 @@ library
   exposed-modules:
       MSParallel
       MSParallelElements
+      MSSequential
   other-modules:
       Paths_magic_squares
   hs-source-dirs:
