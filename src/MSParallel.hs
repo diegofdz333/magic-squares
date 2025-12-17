@@ -39,7 +39,7 @@ check n square = checkRows 0 && checkCols 0 && checkDiagOne && checkDiagTwo && c
         checkDiagTwo = sum [ square ! (n - i - 1, i) | i <- [0..(n-1)] ] == constant
 
         -- Reflection / Rotation Fix
-        checkLastCornerLargest = square ! (0, 0) < square ! (n - 1, n - 1)
+        checkLastCornerLargest = square ! (0, 0) <= square ! (n - 1, n - 1)
 
 -- Fill in a row of the magic square.
 row :: Int -> Int -> Array (Int, Int) Int -> Set Int -> Int
@@ -62,9 +62,9 @@ row n pos square rest = possibleRows stepPerms
                 r = base - sum p -- The necessary value for the last element for row to be magic.
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && r < p0 = 0 -- Reflection / Rotation Fix
-                    | member r s         = col n pos nextSquare $ delete r s
-                    | otherwise          = 0 -- Prune if the necessary last element of row does not exist.
+                    | n > 1 && pos == 0 && r < p0 = 0 -- Reflection / Rotation Fix
+                    | member r s                  = col n pos nextSquare $ delete r s
+                    | otherwise                   = 0 -- Prune if the necessary last element of row does not exist.
                 nextSquare = square // [((pos, j), v) | (j, v) <- zip [pos..] p]
                                     // [((pos, n - 1), r)]
 
@@ -87,16 +87,17 @@ col n pos square rest
                 r = base - sum p
                 s = foldr delete rest p
                 pVal
-                    | pos == 0 && r < s1 = 0 -- Reflection / Rotation Fix
-                    | member r s                     = row n (pos + 1) nextSquare $ delete r s
-                    | otherwise                      = 0
+                    | n > 1 && pos == 0 && r < s1 = 0 -- Reflection / Rotation Fix
+                    | member r s                  = row n (pos + 1) nextSquare $ delete r s
+                    | otherwise                   = 0
                 nextSquare = square // [((i, pos), v) | (i, v) <- zip [pos+1..] p]
                                     // [((n - 1, pos), r)]
 
 
 enumerateSquares :: Int -> Int
-enumerateSquares n = row n 0 square values * 8
+enumerateSquares n = row n 0 square values * rr
     where
+        rr = if n == 1 then 1 else 8
         square = array ((0,0), (n-1, n-1)) [((i, j), 0) | i <- [0..n-1], j <- [0..n-1]]
         values = fromList [1..n*n]
 
