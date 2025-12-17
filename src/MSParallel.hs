@@ -101,4 +101,4 @@ enumerateSquares n = row n 0 square values * 8
         values = fromList [1..n*n]
 
 targetD :: Int
-targetD = 1
+targetD = 2
